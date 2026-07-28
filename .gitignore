@@ -1,0 +1,11 @@
+# Generated pipeline artifacts — reproducible from the seeded generator, so not tracked.
+05_Development/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
