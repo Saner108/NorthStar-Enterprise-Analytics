@@ -320,20 +320,47 @@ def generate(out_dir, seed):
     n_shortage_episodes = 0
     max_start = len(days) - 6  # leave room for episode duration
 
-    # Distribution-issue episodes: most SKUs get a few, each at one random store.
-    for sku in sku_list:
-        n_epi = rng.choices([0, 1, 2, 3], weights=[0.15, 0.35, 0.32, 0.18])[0]
-        for _ in range(n_epi):
-            store_id = rng.choice(selling_store_ids)
-            start = rng.randint(0, max_start)
-            duration = rng.randint(1, 6)
-            for off in range(duration):
-                forced_zero.add((store_id, sku, days[start + off].toordinal()))
-            n_dist_episodes += 1
+    # Per-store RELIABILITY spread — the pilot's whole point is that stores differ.
+    # Each selling store gets a target stockout-day rate; the spread (~1.5% best to
+    # ~10% worst, regional ~5-6%) is what gives the store-ranking real signal instead
+    # of every store sitting at ~99.9%. Targets are assigned deterministically then
+    # shuffled so which store is worst is seed-stable but not size-correlated.
+    n_sell = len(selling_store_ids)
+    store_rate = {}
+    _targets = [0.015 + (0.10 - 0.015) * i / (n_sell - 1) for i in range(n_sell)]
+    rng.shuffle(_targets)
+    for sid, t in zip(selling_store_ids, _targets):
+        store_rate[sid] = t
+    E_DUR = 4.0   # expected episode length (days); hazard = rate / E_DUR
 
-    # True-shortage episodes: a small minority of SKUs go scarce region-wide.
+    # DISTRIBUTION-issue episodes: generated PER (store, sku) as a daily hazard scaled
+    # by that store's reliability. A single store runs out while the region still holds
+    # stock elsewhere -> pooled inventory > 0 -> classified "Distribution Issue". This
+    # is the dominant mechanism, and because the hazard is store-specific it is also
+    # what makes some stores measurably worse than others.
+    for store_id in selling_store_ids:
+        hazard = store_rate[store_id] / E_DUR
+        for sku in sku_list:
+            di = 0
+            while di < len(days):
+                if rng.random() < hazard:
+                    duration = rng.randint(2, 7)
+                    for off in range(duration):
+                        if di + off < len(days):
+                            forced_zero.add((store_id, sku, days[di + off].toordinal()))
+                    di += duration
+                    n_dist_episodes += 1
+                else:
+                    di += 1
+
+    # TRUE-SHORTAGE episodes: a SKU goes scarce region-wide (every location out) for a
+    # short window -> pooled inventory = 0 -> classified "True Shortage". Kept a genuine
+    # minority so the founding hypothesis (mostly distribution) can be tested, not
+    # assumed. Volume tuned so shortages land ~1/3 of classified store stockout events.
     for sku in sku_list:
-        if rng.random() < 0.05:
+        n_epi = rng.choices([0, 1, 2, 3, 4, 5, 6],
+                            weights=[0.10, 0.14, 0.18, 0.20, 0.18, 0.12, 0.08])[0]
+        for _ in range(n_epi):
             start = rng.randint(0, max_start)
             duration = rng.randint(1, 3)
             for off in range(duration):

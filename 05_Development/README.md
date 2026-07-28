@@ -74,10 +74,10 @@ riskiest logic is validated against a known truth, not merely run without error.
 recorded in `data/staging/_known_test_cases.json` after generation:
 
 - **Distribution Issue** stockout — `STR-005` / `SKU-1010` on `2025-06-10`: that store is
-  out, but pooled regional inventory (other stores + DC) is > 0 ⇒ KPI-P03 classifies it
-  `Distribution Issue`.
-- **True Shortage** stockout — `SKU-1020` on `2025-09-05`: every location is out ⇒ KPI-P03
-  classifies it `True Shortage`.
+  out, but pooled regional inventory (other stores + DC) clears the BR-008b
+  redistributable-surplus floor of ≥ 3 units ⇒ KPI-P03 classifies it `Distribution Issue`.
+- **True Shortage** stockout — `SKU-1020` on `2025-09-05`: every location is out, so the
+  pooled total is 0 ⇒ KPI-P03 classifies it `True Shortage`.
 - **SCD Type 2 reclassification** — `SKU-1099` moves Electronics → Home Goods on
   `2025-07-15`, producing two `Dim_Product` rows (two `Product_Key`s, one `SKU`) with
   non-overlapping effective-date ranges. Fact rows resolve to the version effective on
@@ -91,8 +91,14 @@ Category only; a one-time generation-and-load pipeline (no live ETL / scheduling
 and no partitioning, custom indexing, or RLS at this ~1.6M-row scale. See the brief for
 why each of these is deliberate.
 
-## What is intentionally *not* here yet
+## What this pipeline feeds
 
-Phase 5 (Analysis) and Phase 6 (Executive Delivery) are not written — per the brief and
-`Visualization_Standards.md`, those require the *actual* figures this pipeline produces
-and must not be pre-written with placeholder numbers presented as real.
+Phase 5 (Analysis) is written against this pipeline's output:
+`06_Analysis/Phase5_Findings_Memo.md`. Every figure in that memo is reproducible from a
+clean run of `python3 run_pipeline.py --seed 42` — regional in-stock 92.5%, the ~9-point
+store spread, the 79.7% / 20.3% distribution-vs-shortage split over ~90.4K store stockout
+events, and ~$2.75M estimated lost margin on ~$81.1M revenue.
+
+Phase 6 (Executive Delivery) is not written yet. Per the brief and
+`Visualization_Standards.md`, it must not be pre-written with placeholder numbers
+presented as real.
