@@ -75,7 +75,7 @@ Defines the exact business logic that every SQL query, Python calculation, and P
 
 ## BR-008b — Distribution vs. Shortage Determination
 
-**Rule:** For any store/SKU stockout (BR-008), sum `Quantity_On_Hand` for that same SKU across all other pilot stores plus the regional DC on the same date. If the pooled total is meaningfully greater than zero, classify as a **distribution/visibility problem**. If the pooled total is also at or near zero, classify as a **true shortage**.
+**Rule:** For any store/SKU stockout (BR-008), sum `Quantity_On_Hand` for that same SKU across all other pilot stores plus the regional DC on the same date. If the pooled total is a **redistributable surplus** — operationalized as **>= 3 units** (a 1-2 unit remnant at another location is shelf residue, not stock that could realistically have been shipped to cover the stockout) — classify as a **distribution/visibility problem**. If the pooled total is at or near zero (0-2 units), classify as a **true shortage**. *The 3-unit floor is a documented, adjustable assumption; the per-stockout view exposes the raw pooled quantity so borderline cases can be re-examined.*
 
 **Business Impact:** Directly implements FR-P07 — this is the rule that proves (or disproves) the pilot's core hypothesis that NorthStar's stockout problem is about distribution, not total supply.
 

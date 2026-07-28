@@ -44,6 +44,7 @@ import csv
 import json
 import os
 import random
+import math
 from datetime import date, timedelta
 
 # ---------------------------------------------------------------------------
@@ -156,7 +157,12 @@ def build_dim_product(rng):
 
     for i in range(N_SKUS):
         sku = f"SKU-{1000 + i}"
-        cost = round(rng.uniform(5.0, 800.0), 2)
+        # Log-uniform price draw: a realistic assortment is mostly low-priced
+        # items with a thin tail of expensive ones. A flat uniform(5,800) drew a
+        # ~$400 mean cost, which made 2 categories out-earn a whole store's
+        # all-category average vs. the company profile. Log-uniform [5,250] lands
+        # ~20% of the parent's per-store revenue for Electronics + Home Goods.
+        cost = round(math.exp(rng.uniform(math.log(5.0), math.log(250.0))), 2)
         retail = round(cost * rng.uniform(1.20, 2.20), 2)   # Retail_Price >= Cost
         product_name = f"NorthStar Product {1000 + i}"
         attr_by_sku[sku] = {"Unit_Cost": cost, "Retail_Price": retail,

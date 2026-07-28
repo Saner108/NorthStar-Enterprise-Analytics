@@ -7,7 +7,8 @@
 --
 -- BR-008b: for each stockout (BR-008: Quantity_On_Hand = 0), sum Quantity_On_Hand for
 -- the SAME Product_Key on the SAME Date_Key across ALL OTHER locations (other stores +
--- the regional DC). Pooled > 0 -> 'Distribution Issue'; pooled = 0 -> 'True Shortage'.
+-- the regional DC). Pooled >= 3 units -> 'Distribution Issue'; pooled 0-2 -> 'True Shortage'
+-- (3-unit redistributable-surplus floor; a 1-2 unit remnant is not shippable stock).
 -- Because Product_Key is the SCD Type 2 version effective on the date, all locations on
 -- a given date share the same Product_Key for a SKU, so pooling by Product_Key+Date_Key
 -- is correct. This script returns the headline split (the dashboard's hero visual);
@@ -26,7 +27,7 @@ WITH stockout_classification AS (
                   FROM Fact_Inventory_Snapshot fis2
                   WHERE fis2.Product_Key = fis.Product_Key
                     AND fis2.Date_Key    = fis.Date_Key
-                    AND fis2.Store_Key   <> fis.Store_Key) > 0
+                    AND fis2.Store_Key   <> fis.Store_Key) > 2  -- BR-008b: >=3 units = redistributable surplus (1-2 = shelf remnant)
             THEN 'Distribution Issue'
             ELSE 'True Shortage'
         END AS Classification
