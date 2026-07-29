@@ -1,8 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "mkdir -p .vercel_site && cp '07_Executive_Delivery/dashboard_standalone.html' .vercel_site/index.html",
-  "outputDirectory": ".vercel_site",
-  "framework": null,
+  "outputDirectory": ".",
   "headers": [
     {
       "source": "/",
