@@ -58,7 +58,7 @@ SELECT
               FROM Fact_Inventory_Snapshot fis2
               WHERE fis2.Product_Key = fis.Product_Key
                 AND fis2.Date_Key    = fis.Date_Key
-                AND fis2.Store_Key   <> fis.Store_Key) > 0
+                AND fis2.Store_Key   <> fis.Store_Key) > 2  -- BR-008b: >=3 units = redistributable surplus (1-2 = shelf remnant)
         THEN 'Distribution Issue'
         ELSE 'True Shortage'
     END                                                       AS Classification
@@ -129,3 +129,66 @@ SELECT
 FROM Fact_Sales fs
 JOIN Dim_Date dd ON fs.Date_Key = dd.Date_Key
 GROUP BY dd.Year, dd.Month, dd.Month_Name;
+
+-- ---------------------------------------------------------------------------
+-- vw_ProductReclassification — DEDICATED REPORTING AREA for the SCD Type 2
+-- category reclassification (Decision 4). One row per product VERSION for any SKU
+-- that changed category mid-window (here: SKU-1099, Electronics -> Home Goods on
+-- 2025-07-15). Lets a reviewer see, per version: its effective window, and the
+-- sales / revenue / stockout days that belong to that version only. This is the
+-- exhibit that makes the SCD2 mechanism explainable without cluttering the
+-- VP-facing KPI tables (which roll the SKU up — see vw_EstimatedLostMargin_BySKU).
+-- Generalized (not hardcoded to one SKU): any SKU with >1 version appears here.
+-- ---------------------------------------------------------------------------
+DROP VIEW IF EXISTS vw_ProductReclassification;
+CREATE VIEW vw_ProductReclassification AS
+WITH reclassified AS (
+    SELECT SKU FROM Dim_Product GROUP BY SKU HAVING COUNT(*) > 1
+),
+sales_by_ver AS (
+    SELECT Product_Key, SUM(Quantity_Sold) AS Units_Sold, SUM(Sales_Amount) AS Revenue
+    FROM Fact_Sales GROUP BY Product_Key
+),
+stockout_by_ver AS (
+    SELECT Product_Key, SUM(CASE WHEN Quantity_On_Hand = 0 THEN 1 ELSE 0 END) AS Stockout_Days
+    FROM Fact_Inventory_Snapshot GROUP BY Product_Key
+)
+SELECT
+    dp.SKU,
+    dp.Product_Name,
+    dp.Product_Key,
+    dp.Category,
+    dp.Effective_Start_Date,
+    dp.Effective_End_Date,
+    CASE WHEN dp.Is_Current = 1 THEN 'Current' ELSE 'Prior' END AS Version_Status,
+    COALESCE(s.Units_Sold, 0)      AS Units_Sold_This_Version,
+    COALESCE(s.Revenue, 0)         AS Revenue_This_Version,
+    COALESCE(so.Stockout_Days, 0)  AS Stockout_Days_This_Version
+FROM Dim_Product dp
+JOIN reclassified r    ON dp.SKU = r.SKU
+LEFT JOIN sales_by_ver s   ON dp.Product_Key = s.Product_Key
+LEFT JOIN stockout_by_ver so ON dp.Product_Key = so.Product_Key
+ORDER BY dp.SKU, dp.Effective_Start_Date;
+
+-- ---------------------------------------------------------------------------
+-- vw_EstimatedLostMargin_BySKU — VP-facing rollup of KPI-P02 to the natural SKU
+-- key, so a reclassified SKU shows as ONE line (not one per SCD2 version). Facts
+-- remain versioned; only the reporting layer rolls up. Was_Reclassified flags the
+-- SKU so a reader can drill into vw_ProductReclassification for the split detail.
+-- ---------------------------------------------------------------------------
+DROP VIEW IF EXISTS vw_EstimatedLostMargin_BySKU;
+CREATE VIEW vw_EstimatedLostMargin_BySKU AS
+SELECT
+    v.Store_Key,
+    v.Store_Name,
+    v.SKU,
+    v.Product_Name,
+    (SELECT dc.Category FROM Dim_Product dc
+      WHERE dc.SKU = v.SKU AND dc.Is_Current = 1)              AS Current_Category,
+    CASE WHEN (SELECT COUNT(*) FROM Dim_Product d2 WHERE d2.SKU = v.SKU) > 1
+         THEN 1 ELSE 0 END                                     AS Was_Reclassified,
+    SUM(v.Stockout_Days)                                       AS Stockout_Days,
+    SUM(v.Estimated_Lost_Units)                                AS Estimated_Lost_Units,
+    SUM(v.Estimated_Lost_Margin)                               AS Estimated_Lost_Margin
+FROM vw_EstimatedLostMargin v
+GROUP BY v.Store_Key, v.Store_Name, v.SKU, v.Product_Name;

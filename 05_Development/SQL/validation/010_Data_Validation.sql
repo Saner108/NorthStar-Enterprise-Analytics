@@ -114,25 +114,35 @@ FROM (
     )
     UNION ALL
     -- 16. KPI-P03 known-answer: at least one Distribution Issue stockout exists
+    --     BR-008b threshold: pooled >= 3 units = redistributable surplus (2026-07-28
+    --     fix; 1-2 units is shelf remnant, not shippable stock — see 013/016). Scoped
+    --     to Location_Type = 'Store' (2026-07-28 consistency fix) to match 013/016 —
+    --     the DC itself going to zero is not a classifiable store stockout event; it
+    --     is part of the pool other stockouts are compared against.
     SELECT 16, 'KPI-P03 >= 1 Distribution Issue stockout', '>= 1',
            CAST(COUNT(*) AS TEXT), (COUNT(*) >= 1)
     FROM Fact_Inventory_Snapshot fis
+    JOIN Dim_Store ds ON fis.Store_Key = ds.Store_Key
     WHERE fis.Quantity_On_Hand = 0
+      AND ds.Location_Type = 'Store'
       AND (SELECT COALESCE(SUM(fis2.Quantity_On_Hand), 0)
            FROM Fact_Inventory_Snapshot fis2
            WHERE fis2.Product_Key = fis.Product_Key
              AND fis2.Date_Key = fis.Date_Key
-             AND fis2.Store_Key <> fis.Store_Key) > 0
+             AND fis2.Store_Key <> fis.Store_Key) > 2
     UNION ALL
     -- 17. KPI-P03 known-answer: at least one True Shortage stockout exists
+    --     BR-008b threshold: pooled 0-2 units = true shortage (see notes on 16).
     SELECT 17, 'KPI-P03 >= 1 True Shortage stockout', '>= 1',
            CAST(COUNT(*) AS TEXT), (COUNT(*) >= 1)
     FROM Fact_Inventory_Snapshot fis
+    JOIN Dim_Store ds ON fis.Store_Key = ds.Store_Key
     WHERE fis.Quantity_On_Hand = 0
+      AND ds.Location_Type = 'Store'
       AND (SELECT COALESCE(SUM(fis2.Quantity_On_Hand), 0)
            FROM Fact_Inventory_Snapshot fis2
            WHERE fis2.Product_Key = fis.Product_Key
              AND fis2.Date_Key = fis.Date_Key
-             AND fis2.Store_Key <> fis.Store_Key) = 0
+             AND fis2.Store_Key <> fis.Store_Key) <= 2
 ) checks
 ORDER BY Seq;

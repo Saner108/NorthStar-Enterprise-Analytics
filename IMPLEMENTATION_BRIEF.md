@@ -130,6 +130,10 @@ These are **known-answer test cases** — without them, there's no way to verify
 
 ---
 
-# What Comes After Implementation (Not Yet Started)
+# What Comes After Implementation
 
-Per `04_Analytics_Design`'s planning, Phase 5 (Analysis) and Phase 6 (Executive Delivery) are not yet built — those require real output from the implementation phase (actual in-stock rates, actual lost-margin figures, actual distribution-vs-shortage split) before they can be written honestly. Do not pre-write executive findings or recommendations with placeholder numbers presented as if real — the Visualization_Standards.md document explicitly flags this as a mistake to avoid.
+Phase 5 (Analysis) is now written: `06_Analysis/Phase5_Findings_Memo.md`. It was deliberately written *after* the implementation produced real output, per the rule below — every figure in it (in-stock rates, lost margin, the distribution-vs-shortage split, the store ranking) is computed from the loaded star schema, reproducible by running `05_Development/run_pipeline.py --seed 42`.
+
+Phase 6 (Executive Delivery) is now built too: `07_Executive_Delivery/` holds the one-page executive dashboard produced from the Phase 4 wireframe, with its locked section order (KPI cards → distribution-vs-shortage hero → store ranking → trend) intact per Decision 7. Every figure on it was verified against the seed-42 database before being committed — all 22 store-ranking rows match the reporting views exactly. See that folder's README for the verification detail and for two corrections applied to the delivered export.
+
+The standing rule still applies to any revision of Phase 5 or Phase 6: do not pre-write executive findings or recommendations with placeholder numbers presented as if real — the Visualization_Standards.md document explicitly flags this as a mistake to avoid. Note that the Phase 5 memo holds the line on Decision 8 (no fabricated success percentages): it states the addressable opportunity as an upper bound (~$2.19M, the distribution-classified share of lost margin) and explicitly declines to claim a recovery target, marking it *baseline pending*.
