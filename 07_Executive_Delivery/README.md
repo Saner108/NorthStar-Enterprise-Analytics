@@ -42,6 +42,27 @@ The script needs the React UMD builds and the `@fontsource` webfont packages ava
 locally (see the paths at the top of the file). It fails loudly rather than silently
 emitting a page that reaches for the network.
 
+## Publishing it as a website
+
+`vercel.json` at the repo root configures a Vercel deploy that serves **only** this
+dashboard at `/`:
+
+```json
+"buildCommand": "mkdir -p .vercel_site && cp '07_Executive_Delivery/dashboard_standalone.html' .vercel_site/index.html",
+"outputDirectory": ".vercel_site"
+```
+
+The copy-into-an-output-directory step is deliberate. Serving the repository root instead
+would publish every planning document in the project as a raw file; scoping the output to
+one generated directory means the deployment contains exactly one page and nothing else.
+Because the source is the standalone build, the hosted page has no third-party runtime
+dependency — it will not break if a CDN is unreachable from a viewer's network.
+
+To connect it: import `Saner108/NorthStar-Enterprise-Analytics` at vercel.com, leave every
+build setting on its default (`vercel.json` supplies them), and deploy. Production builds
+track the repository's default branch, so the dashboard has to be merged to `main` before
+the production URL will serve it; branches deploy to preview URLs in the meantime.
+
 ## Section order (locked — matches the wireframe)
 
 KPI cards → **Distribution vs. Shortage hero visual** → store ranking table → 12-month
