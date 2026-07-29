@@ -99,6 +99,7 @@ clean run of `python3 run_pipeline.py --seed 42` — regional in-stock 92.5%, th
 store spread, the 79.7% / 20.3% distribution-vs-shortage split over ~90.4K store stockout
 events, and ~$2.75M estimated lost margin on ~$81.1M revenue.
 
-Phase 6 (Executive Delivery) is not written yet. Per the brief and
-`Visualization_Standards.md`, it must not be pre-written with placeholder numbers
-presented as real.
+Phase 6 (Executive Delivery) is `07_Executive_Delivery/` — the one-page executive
+dashboard. Its embedded figures are a point-in-time snapshot of the seed-42 build (all 22
+store-ranking rows verified against the reporting views), so **if you change the generator
+or the seed, refresh that dashboard's numbers too**.
