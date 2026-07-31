@@ -34,7 +34,7 @@ Full analysis: **[06_Analysis/Phase5_Findings_Memo.md](06_Analysis/Phase5_Findin
 | `03_Data_Discovery` | Source inventory, business rules, data dictionary, mappings |
 | `04_Analytics_Design` | Star schema, KPIs, Power BI model, dashboard wireframe |
 | `05_Development` | Deterministic data generation, SQL (schema→load→validate→analyze→views), pipeline runner |
-| `06_Analysis` | **Phase 5 findings memo**, plus `NorthStar_Data_Explorer.xlsx` — the seed-42 data as a spreadsheet (dimensions in full, facts sampled, a sheet per KPI) |
+| `06_Analysis` | **Phase 5 findings memo**, plus [NorthStar_Data_Explorer.xlsx](06_Analysis/NorthStar_Data_Explorer.xlsx) — the seed-42 data as a spreadsheet (dimensions in full, facts sampled, a sheet per KPI) |
 | `07_Executive_Delivery` | **Phase 6 executive dashboard** (source) |
 | `techniques/` | Write-ups of the 10 techniques used — with SQL, sample rows, and diagrams |
 | `index.html` | The dashboard, served at the site root (Vercel) |
