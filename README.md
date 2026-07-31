@@ -10,8 +10,10 @@ Scope is deliberately narrow — **Southwest region, ~22 stores + 1 DC, Electron
 in-store channel, 12 months**. The full $5.2B/250-store enterprise context lives in
 `00_Foundation/` for realism; everything else is scoped honestly to the pilot.
 
-**[▶ Live dashboard](https://YOUR-VERCEL-URL.vercel.app)** · **[Findings memo](06_Analysis/Phase5_Findings_Memo.md)** · **[Techniques & methods](techniques/TECHNIQUES.md)**
+**[▶ Live dashboard](https://north-star-enterprise-analytics.vercel.app)** · **[Findings memo](06_Analysis/Phase5_Findings_Memo.md)** · **[Techniques & methods](techniques/TECHNIQUES.md)**
 <!-- replace the Vercel URL above once the project is deployed -->
+
+To view the standalone local export: open `07_Executive_Delivery/dashboard_standalone.html` in a browser or visit the live dashboard URL above.
 
 <!-- Add a dashboard screenshot here, e.g. ![Dashboard](assets/dashboard.png) — take it from the live Vercel page -->
 
@@ -34,7 +36,7 @@ Full analysis: **[06_Analysis/Phase5_Findings_Memo.md](06_Analysis/Phase5_Findin
 | `03_Data_Discovery` | Source inventory, business rules, data dictionary, mappings |
 | `04_Analytics_Design` | Star schema, KPIs, Power BI model, dashboard wireframe |
 | `05_Development` | Deterministic data generation, SQL (schema→load→validate→analyze→views), pipeline runner |
-| `06_Analysis` | **Phase 5 findings memo**, plus [NorthStar_Data_Explorer.xlsx](06_Analysis/NorthStar_Data_Explorer.xlsx) — the seed-42 data as a spreadsheet (dimensions in full, facts sampled, a sheet per KPI) |
+| `06_Analysis` | **Phase 5 findings memo**, plus [NorthStar_Data_Explorer.xlsx](06_Analysis/NorthStar_Data_Explorer.xlsx) — seed-42 snapshot (dimensions in full, facts sampled; file size ~214 KB). Also available as a release asset (v1.0.0). |
 | `07_Executive_Delivery` | **Phase 6 executive dashboard** (source) |
 | `techniques/` | Write-ups of the 10 techniques used — with SQL, sample rows, and diagrams |
 | `index.html` | The dashboard, served at the site root (Vercel) |
@@ -77,6 +79,8 @@ reporting views. On success every check passes and it exits `0`.
 - Verified end-to-end at seed 42: in-stock **92.49%**, split **79.7 / 20.3**, lost margin **$2,750,523** — matching the findings memo to the dollar.
 - **17/17** automated integrity checks pass; SCD Type 2 shows **0** misrouted fact rows.
 - Generated data and the SQLite DB are git-ignored because they are fully reproducible from the generator + seed.
+
+The NorthStar_Data_Explorer.xlsx workbook is also published as a release asset (v1.0.0) for easy download.
 
 ## The 5 KPIs
 
