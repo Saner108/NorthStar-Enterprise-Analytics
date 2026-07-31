@@ -1,122 +1,99 @@
-# NorthStar Enterprise Analytics
+# NorthStar Retail Group — Inventory Visibility Pilot
 
-A deterministic synthetic data analytics pilot for **NorthStar Retail Group** focused on inventory visibility for **Electronics and Home Goods in the Southwest region**.
+A deterministic, synthetic-data analytics pilot that answers one operational question for a
+fictional $5.2B omnichannel retailer:
 
-This repository contains the planning, data design, analytics design, and runnable implementation for a small star-schema + Power BI proof of concept that answers a core business question:
+> When stores run out of stock, is it a **distribution/visibility problem** (the inventory
+> exists elsewhere in the region) or a **true shortage** (the region is genuinely out)?
 
-> Is the stockout problem driven by a **distribution issue** or by a **true shortage**?
+Scope is deliberately narrow — **Southwest region, ~22 stores + 1 DC, Electronics & Home Goods,
+in-store channel, 12 months**. The full $5.2B/250-store enterprise context lives in
+`00_Foundation/` for realism; everything else is scoped honestly to the pilot.
 
-## What’s in this repo
+**[▶ Live dashboard](https://YOUR-VERCEL-URL.vercel.app)** · **[Findings memo](06_Analysis/Phase5_Findings_Memo.md)** · **[Techniques & methods](techniques/TECHNIQUES.md)**
+<!-- replace the Vercel URL above once the project is deployed -->
 
-- **00_Foundation** — enterprise and company context
-- **01_Project_Initiation** — charter and stakeholders
-- **02_Business_Discovery** — business requirements
-- **03_Data_Discovery** — source inventory, rules, dictionary, and mappings
-- **04_Analytics_Design** — star schema, KPIs, Power BI model, and dashboard design
-- **05_Development** — deterministic data generation, SQL scripts, and pipeline runner
-- **06_Analysis** — Phase 5 findings memo, plus a spreadsheet explorer for the generated data
-- **07_Executive_Delivery** — Phase 6 one-page executive dashboard
-- **techniques/** — write-ups of the techniques used, and why each was chosen
-- **IMPLEMENTATION_BRIEF.md** — the most important design decisions and execution order
+<!-- Add a dashboard screenshot here, e.g. ![Dashboard](assets/dashboard.png) — take it from the live Vercel page -->
 
-## Techniques & Methods
+## Headline finding
 
-A short tour of the data-engineering and analytics techniques used in this pilot —
-what each one is, **why** it was chosen over the alternative, and what it looks like
-in the actual build. Full write-ups (with real SQL, sample rows, and diagrams) linked below.
+- **92.5% regional in-stock rate** — but uneven: worst store **87.9%**, best **96.9%** (a 9-point spread).
+- **79.7% of stockouts are Distribution Issues** (stock existed elsewhere in the region) vs **20.3% True Shortages** — the founding hypothesis, confirmed by the data, not assumed.
+- **~$2.75M estimated lost margin (3.4% of revenue)**, and roughly a **third of it sits in just five stores**.
+- The fix the data points to: **redistribute to the worst stores**, not buy more inventory. No improvement target is claimed — *baseline pending*.
 
-| # | Technique | Why it's here (one line) |
-|---|-----------|--------------------------|
-| 1 | [Dimensional (star-schema) modeling](techniques/docs/01-dimensional-modeling.md) | Query-simple, BI-ready structure with a clear grain |
-| 2 | [Two fact tables at different grains](techniques/docs/02-two-fact-grains.md) | Sales and inventory answer different questions — merging them double-counts |
-| 3 | [Daily snapshot grain](techniques/docs/03-snapshot-grain.md) | A deliberate storage-for-simplicity trade-off |
-| 4 | [SCD Type 2](techniques/docs/04-scd-type-2.md) | Keep history correct when a product is reclassified mid-year |
-| 5 | [Business-rule separation](techniques/docs/05-business-rule-separation.md) | Detect, cost, and diagnose a stockout as three distinct rules |
-| 6 | [Pooled-inventory classification](techniques/docs/06-pooled-classification.md) | The query that proves or disproves the whole hypothesis |
-| 7 | [Deterministic synthetic data](techniques/docs/07-synthetic-data-generation.md) | Reproducible data with a known, injectable problem |
-| 8 | [Known-answer testing & validation](techniques/docs/08-validation-testing.md) | Prove the pipeline is *correct*, not just that it ran |
-| 9 | [Reporting/semantic view layer](techniques/docs/09-reporting-views.md) | Separate presentation from storage |
+Full analysis: **[06_Analysis/Phase5_Findings_Memo.md](06_Analysis/Phase5_Findings_Memo.md)**.
+
+## What's in this repo
+
+| Folder | Contents |
+|---|---|
+| `00_Foundation` | Enterprise/company context (kept full-scale as reference) |
+| `01_Project_Initiation` | Charter, stakeholder register |
+| `02_Business_Discovery` | Business requirements |
+| `03_Data_Discovery` | Source inventory, business rules, data dictionary, mappings |
+| `04_Analytics_Design` | Star schema, KPIs, Power BI model, dashboard wireframe |
+| `05_Development` | Deterministic data generation, SQL (schema→load→validate→analyze→views), pipeline runner |
+| `06_Analysis` | **Phase 5 findings memo**, plus `NorthStar_Data_Explorer.xlsx` — the seed-42 data as a spreadsheet (dimensions in full, facts sampled, a sheet per KPI) |
+| `07_Executive_Delivery` | **Phase 6 executive dashboard** (source) |
+| `techniques/` | Write-ups of the 10 techniques used — with SQL, sample rows, and diagrams |
+| `index.html` | The dashboard, served at the site root (Vercel) |
+| `IMPLEMENTATION_BRIEF.md` | The design decisions that matter most, and execution order |
+
+## Techniques & methods
+
+What each method is, **why** it was chosen over the alternative, and what it looks like in the
+build (real SQL, sample rows, Mermaid diagrams). Full write-ups in **[`techniques/`](techniques/TECHNIQUES.md)**.
+
+| # | Technique | Why it's here |
+|---|-----------|---------------|
+| 1 | [Dimensional (star-schema) modeling](techniques/docs/01-dimensional-modeling.md) | Query-simple, BI-ready, explicit grain |
+| 2 | [Two fact tables at different grains](techniques/docs/02-two-fact-grains.md) | Merging sales + inventory double-counts |
+| 3 | [Daily snapshot grain](techniques/docs/03-snapshot-grain.md) | Storage-for-simplicity trade-off |
+| 4 | [SCD Type 2](techniques/docs/04-scd-type-2.md) | Keep history correct through a mid-year reclassification |
+| 5 | [Business-rule separation](techniques/docs/05-business-rule-separation.md) | Detect ≠ cost ≠ diagnose a stockout |
+| 6 | [Pooled-inventory classification](techniques/docs/06-pooled-classification.md) | The query that tests the hypothesis |
+| 7 | [Deterministic synthetic data](techniques/docs/07-synthetic-data-generation.md) | Reproducible data with a known injected problem |
+| 8 | [Known-answer testing & validation](techniques/docs/08-validation-testing.md) | Prove correctness, not just execution |
+| 9 | [Reporting / semantic views](techniques/docs/09-reporting-views.md) | Separate presentation from storage |
 | 10 | [Audience-driven dashboard hierarchy](techniques/docs/10-dashboard-hierarchy.md) | Lead with the decision-maker's first question |
-
-> All figures come from a single deterministic build (`--seed 42`) and are reproducible.
-
-## Browsing the data without running anything
-
-`06_Analysis/NorthStar_Data_Explorer.xlsx` is a spreadsheet view of the seed-42 build: all
-three dimensions in full, both fact tables sampled to 1,000 rows each, one sheet per KPI, the
-store × SKU lost-margin detail, and the SCD Type 2 reclassification shown as two versions with
-each version's own sales. Useful for a quick look at the actual rows; the database itself is
-regenerated by the pipeline below.
-
-## Project highlights
-
-- Two fact tables with different grains:
-  - `Fact_Sales` — one row per SKU per transaction
-  - `Fact_Inventory_Snapshot` — one row per store/SKU/day
-- `Dim_Product` uses **SCD Type 2** only for category changes
-- Stockout detection, impact, and root-cause classification are separate rules
-- The implementation is a **one-time synthetic data pipeline**, not a live ETL system
-- The pipeline generates known-answer test cases so the most important logic can be verified
 
 ## Quick start
 
-To run the implementation:
+No third-party packages required.
 
 ```bash
 cd 05_Development
-python3 run_pipeline.py
+python3 run_pipeline.py --seed 42
 ```
 
-The pipeline:
+The pipeline: generates deterministic synthetic CSVs → creates the SQLite schema → loads
+dimensions then facts → runs 17 validation checks → computes the 5 KPI queries → builds
+reporting views. On success every check passes and it exits `0`.
 
-1. Generates deterministic synthetic CSV data
-2. Creates the SQLite schema
-3. Loads dimensions and fact tables
-4. Runs validation checks
-5. Computes KPI queries
-6. Creates reporting views
+## Reproducibility & verification
 
-## Expected output
+- **Seeded (`--seed 42`)**: the entire ~1.6M-row dataset is byte-for-byte reproducible.
+- Verified end-to-end at seed 42: in-stock **92.49%**, split **79.7 / 20.3**, lost margin **$2,750,523** — matching the findings memo to the dollar.
+- **17/17** automated integrity checks pass; SCD Type 2 shows **0** misrouted fact rows.
+- Generated data and the SQLite DB are git-ignored because they are fully reproducible from the generator + seed.
 
-On success, the pipeline prints validation results where every check passes and exits with code `0`.
+## The 5 KPIs
 
-## Repository structure
-
-```text
-NorthStar-Enterprise-Analytics/
-├── 00_Foundation/
-├── 01_Project_Initiation/
-├── 02_Business_Discovery/
-├── 03_Data_Discovery/
-├── 04_Analytics_Design/
-├── 05_Development/
-├── 06_Analysis/
-├── 07_Executive_Delivery/
-├── techniques/
-├── index.html                  # the dashboard, served as the site homepage
-├── support.js                  # runtime index.html loads; keep it beside index.html
-├── vercel.json
-├── IMPLEMENTATION_BRIEF.md
-├── README.md
-└── .gitignore
-```
-
-## Notes
-
-- No third-party Python packages are required.
-- Generated data and SQLite files are ignored by git because they are reproducible.
-- Phase 5 analysis (`06_Analysis/`) and Phase 6 executive delivery (`07_Executive_Delivery/`)
-  are both written. Every figure in them comes from a `--seed 42` build and was checked
-  against the loaded database.
+`In-Stock Rate %` · `Estimated Lost Margin $` · `Distribution vs. Shortage Classification` ·
+`Total Revenue` · `Gross Margin %` — each traces to a stated business question (see
+`04_Analytics_Design/KPI_Catalog.md`).
 
 ## Recommended reading order
 
 1. `IMPLEMENTATION_BRIEF.md`
 2. `01_Project_Initiation/Executive_Project_Charter.md`
-3. `02_Business_Discovery/Business_Requirements_Document.md`
-4. `03_Data_Discovery/Data_Dictionary.md`
-5. `04_Analytics_Design/Star_Schema.md`
-6. `05_Development/README.md`
-7. `techniques/TECHNIQUES.md`
-8. `06_Analysis/Phase5_Findings_Memo.md`
-9. `07_Executive_Delivery/README.md`
+3. `03_Data_Discovery/Business_Rules_Catalog.md` (the three-part stockout logic)
+4. `04_Analytics_Design/Star_Schema.md`
+5. `techniques/TECHNIQUES.md`
+6. `06_Analysis/Phase5_Findings_Memo.md`
+
+## Notes
+
+- Data is **synthetic**; a one-time deterministic generation pipeline, **not** a production ETL feed. Figures demonstrate the method, not real company performance.
+- The repo is named "Enterprise" for the full company context; the delivered work is the deliberately scoped-down **pilot** described above.
